@@ -1,0 +1,21 @@
+.board {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    max-width: 800px;
+    margin: 20px auto;
+  }
+  
+  .board p {
+    font-size: 1.2rem;
+    margin-top: 10px;
+    color: #333;
+  }
+  
+  /* New style for the game over message */
+  .board .game-over {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #e44d26; /* Use a color that stands out, e.g., orange */
+  }
+  
