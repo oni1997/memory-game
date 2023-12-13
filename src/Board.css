@@ -12,10 +12,9 @@
     color: #333;
   }
   
-  /* New style for the game over message */
   .board .game-over {
     font-size: 1.5rem;
     font-weight: bold;
-    color: #e44d26; /* Use a color that stands out, e.g., orange */
+    color: #e44d26;
   }
   
