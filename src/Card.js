@@ -10,7 +10,7 @@ function Card({ id, value, color, isFlipped, handleClick }) {
 
   return (
     <div
-      className={`card ${isFlipped ? 'flipped' : ''} ${color === 'red' ? 'red-text' : 'black-text'}`}
+      className={`card ${isFlipped ? 'flipped' : ''} ${color}`}
       onClick={handleClickInternal}
     >
       {isFlipped && <p>{value}</p>}
