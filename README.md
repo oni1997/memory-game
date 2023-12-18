@@ -17,6 +17,7 @@ This is a React-based Memory Game where two players take turns flipping cards to
    npm install
 
 4. **Start the development server:**
+
    npm start
 
 5. **Open your browser and go to http://localhost:3000 to play the Memory Game.**
@@ -45,4 +46,6 @@ This is a React-based Memory Game where two players take turns flipping cards to
 ## Acknowledgments
 
 - The Memory Game was created as part of a fun assessment for the Specno team.
-- Design inspiration and initial code structure were provided.
+
+
+**Play the Memory Game: [https://oni1997.github.io/memory-game/](https://oni1997.github.io/memory-game/)**
