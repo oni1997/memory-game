@@ -4,11 +4,11 @@ import Modal from './Modal';
 import Board from './Board';
 
 function App() {
-  const [playerNames, setPlayerNames] = useState({ player1: '', player2: '' });
+  const [gameConfig, setGameConfig] = useState(null);
   const [showModal, setShowModal] = useState(true);
 
-  const startGame = (players) => {
-    setPlayerNames(players);
+  const startGame = (config) => {
+    setGameConfig(config);
     setShowModal(false);
   };
 
@@ -16,7 +16,7 @@ function App() {
     <div className="App">
       <h1>Memory Game</h1>
       {showModal && <Modal startGame={startGame} />}
-      {!showModal && <Board playerNames={playerNames} />}
+      {!showModal && <Board playerNames={gameConfig} />}
     </div>
   );
 }

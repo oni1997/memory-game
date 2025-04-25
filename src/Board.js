@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Card from './Card';
 import './Board.css';
 
@@ -13,6 +13,92 @@ function Board({ playerNames }) {
   });
   const [winner, setWinner] = useState(null);
   const [showInitialCards, setShowInitialCards] = useState(true);
+  const isSinglePlayer = playerNames.player2 === 'Computer';
+  const [computerMemory, setComputerMemory] = useState(new Map());
+
+  const shuffleDeck = useCallback((array) => {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+  }, []);
+
+  const handleCardClick = useCallback((id) => {
+    if (showInitialCards || flipped.length === 2) return;
+    if (isSinglePlayer && turn === playerNames.player2) return;
+    if (matched.includes(id) || flipped.includes(id)) return;
+    
+    setFlipped(prevFlipped => [...prevFlipped, id]);
+  }, [showInitialCards, flipped, isSinglePlayer, turn, playerNames.player2, matched]);
+
+  const updateComputerMemory = useCallback((cardIndex, cardValue, cardColor) => {
+    if (!isSinglePlayer) return;
+    
+    setComputerMemory(prevMemory => {
+      const newMemory = new Map(prevMemory);
+      newMemory.set(cardIndex, { value: cardValue, color: cardColor });
+      
+      // Keep only the last 4 cards in memory
+      if (newMemory.size > 4) {
+        const firstKey = newMemory.keys().next().value;
+        newMemory.delete(firstKey);
+      }
+      return newMemory;
+    });
+  }, [isSinglePlayer]);
+
+  const computerMove = useCallback(() => {
+    if (!isSinglePlayer || turn !== playerNames.player2 || flipped.length > 0) return;
+
+    const makeMove = () => {
+      const availableCards = deck
+        .map((_, index) => index)
+        .filter(index => !matched.includes(index) && !flipped.includes(index));
+
+      // Check memory for matching pairs
+      let firstCard = null;
+      let secondCard = null;
+
+      // Convert memory to array for easier processing
+      const memoryEntries = Array.from(computerMemory.entries());
+
+      // Look for matches in memory
+      for (let i = 0; i < memoryEntries.length; i++) {
+        const [index1, card1] = memoryEntries[i];
+        if (!availableCards.includes(index1)) continue;
+
+        for (let j = i + 1; j < memoryEntries.length; j++) {
+          const [index2, card2] = memoryEntries[j];
+          if (!availableCards.includes(index2)) continue;
+
+          if (card1.value === card2.value && card1.color === card2.color) {
+            firstCard = parseInt(index1);
+            secondCard = parseInt(index2);
+            break;
+          }
+        }
+        if (firstCard !== null) break;
+      }
+
+      // If no matches found in memory, pick random cards
+      if (firstCard === null) {
+        firstCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+        const remainingCards = availableCards.filter(card => card !== firstCard);
+        secondCard = remainingCards[Math.floor(Math.random() * remainingCards.length)];
+      }
+
+      // Make the moves
+      setFlipped([firstCard]);
+      setTimeout(() => {
+        setFlipped(prev => [...prev, secondCard]);
+      }, 1000);
+    };
+
+    const timeoutId = setTimeout(makeMove, 1500);
+    return () => clearTimeout(timeoutId);
+  }, [deck, flipped, matched, isSinglePlayer, turn, playerNames.player2, computerMemory]);
 
   useEffect(() => {
     const cardValues = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
@@ -31,7 +117,6 @@ function Board({ playerNames }) {
       const shuffledDeck = shuffleDeck(newDeck.concat(newDeck));
       setDeck(shuffledDeck);
       
-      // Show all cards for 5 seconds
       const allCardIndexes = Array.from({ length: shuffledDeck.length }, (_, i) => i);
       setFlipped(allCardIndexes);
       
@@ -41,28 +126,14 @@ function Board({ playerNames }) {
       }, 5000);
     };
 
-    const shuffleDeck = (deck) => {
-      for (let i = deck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [deck[i], deck[j]] = [deck[j], deck[i]];
-      }
-
-      const redJokerIndex = deck.findIndex(card => card.value === 'Joker' && card.color === 'red');
-      const blackJokerIndex = deck.findIndex(card => card.value === 'Joker' && card.color === 'black');
-
-      if (redJokerIndex !== -1) deck.splice(redJokerIndex, 1);
-      if (blackJokerIndex !== -1) deck.splice(blackJokerIndex, 1);
-
-      return deck;
-    };
-
     initializeDeck();
-  }, []);
+  }, [shuffleDeck]);
 
-  const handleCardClick = (id) => {
-    if (showInitialCards || flipped.length === 2) return;
-    setFlipped((flipped) => [...flipped, id]);
-  };
+  useEffect(() => {
+    if (isSinglePlayer && turn === playerNames.player2) {
+      computerMove();
+    }
+  }, [computerMove, isSinglePlayer, turn, playerNames.player2]);
 
   useEffect(() => {
     if (flipped.length === 2) {
@@ -70,23 +141,31 @@ function Board({ playerNames }) {
       const isMatch = deck[firstCard].value === deck[secondCard].value && 
                      deck[firstCard].color === deck[secondCard].color;
 
-      if (isMatch) {
-        setMatched((matched) => [...matched, firstCard, secondCard]);
-        setScores((prevScores) => ({
-          ...prevScores,
-          [turn]: prevScores[turn] + 10,
-        }));
-        setFlipped([]);  // Clear flipped immediately for matches
-      } else {
-        setTimeout(() => {
+      // Update computer's memory of seen cards
+      if (turn === playerNames.player1 || isSinglePlayer) {
+        updateComputerMemory(firstCard, deck[firstCard].value, deck[firstCard].color);
+        updateComputerMemory(secondCard, deck[secondCard].value, deck[secondCard].color);
+      }
+
+      const timeoutId = setTimeout(() => {
+        if (isMatch) {
+          setMatched(prev => [...prev, firstCard, secondCard]);
+          setScores(prevScores => ({
+            ...prevScores,
+            [turn]: prevScores[turn] + 10,
+          }));
           setFlipped([]);
-          setTurn((currentTurn) => 
+        } else {
+          setFlipped([]);
+          setTurn(currentTurn => 
             currentTurn === playerNames.player1 ? playerNames.player2 : playerNames.player1
           );
-        }, 1000);
-      }
+        }
+      }, 1000);
+
+      return () => clearTimeout(timeoutId);
     }
-  }, [flipped, deck, turn, playerNames]);
+  }, [flipped, deck, turn, playerNames, isSinglePlayer, updateComputerMemory]);
 
   useEffect(() => {
     if (matched.length === deck.length && deck.length > 0) {
@@ -126,12 +205,10 @@ function Board({ playerNames }) {
         </h2>
         <p>Score: {scores[playerNames.player2]}</p>
       </div>
-      {winner ? (
+      {winner && (
         <div className="winner-announcement">
           Game Over! {winner} wins with {scores[winner]} points!
         </div>
-      ) : (
-        <p className="turn-indicator">Current Turn: {turn}</p>
       )}
     </div>
   );

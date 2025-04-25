@@ -1,0 +1,76 @@
+
+.modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  padding: 4vh;
+  border-radius: 10px;
+  width: min(80vw, 400px);
+  display: flex;
+  flex-direction: column;
+  gap: 2vh;
+}
+
+.modal h2 {
+  font-size: clamp(18px, 3vh, 24px);
+  margin: 0;
+  color: #333;
+  text-align: center;
+}
+
+.mode-selector {
+  display: flex;
+  gap: 1vh;
+  margin-bottom: 2vh;
+}
+
+.mode-selector button {
+  flex: 1;
+  padding: 1vh;
+  font-size: clamp(14px, 2vh, 16px);
+  border: 2px solid #4CAF50;
+  background: white;
+  color: #4CAF50;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.mode-selector button.active {
+  background: #4CAF50;
+  color: white;
+}
+
+.modal input {
+  padding: 1vh;
+  font-size: clamp(14px, 2vh, 18px);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.modal button:last-child {
+  padding: 1vh 2vw;
+  font-size: clamp(14px, 2vh, 18px);
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 1vh;
+}
+
+.modal button:hover {
+  opacity: 0.9;
+}
+
